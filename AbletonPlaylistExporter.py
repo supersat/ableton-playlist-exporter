@@ -7,6 +7,7 @@
 import argparse
 import gzip
 import mutagen
+import os
 import sys
 import xml.etree.ElementTree as ET
 
@@ -21,22 +22,24 @@ class AbletonPlaylistExporter:
         for clip in clips:
             startTime = clip.find('CurrentStart').get('Value')
             fileRef = clip.find('./SampleRef/FileRef')
-            fileRefData = ''.join(fileRef.find('Data').text.split())
-            fileName = fileRefData.decode('hex').decode('utf16')
-            metadata = mutagen.File(fileName, easy=True)
-            song = {'timestamp': float(startTime), 'filename': fileName }
-            if 'album' in metadata:
-                song['album'] = metadata['album'][0]
-            else:
-                song['album'] = ''
-            if 'artist' in metadata:
-                song['artist'] = metadata['artist'][0]
-            else:
-                song['artist'] = ''
-            if 'title' in metadata:
-                song['title'] = metadata['title'][0]
-            else:
-                song['title'] = ''
+            fileRefType = fileRef.find('Type').get('Value')
+            if fileRefType == 1: # Windows file ref?
+                fileRefData = ''.join(fileRef.find('Data').text.split())
+                fileName = fileRefData.decode('hex')[0:-2].decode('utf16')
+            else: # OSX file ref?
+                pathParts = [part.get('Dir') for part in fileRef.findall('./SearchHint/PathHint/RelativePathElement')]
+                fileName = os.sep + os.sep.join(pathParts) + os.sep + fileRef.find('Name').get('Value')
+            song = {'timestamp': float(startTime), 'filename': fileName, 'title': fileName, 'artist': '', 'album': '' }
+            try:
+                metadata = mutagen.File(fileName, easy=True)
+                if 'album' in metadata:
+                    song['album'] = metadata['album'][0]
+                if 'artist' in metadata:
+                    song['artist'] = metadata['artist'][0]
+                if 'title' in metadata:
+                    song['title'] = metadata['title'][0]
+            except:
+                pass
             songs.append(song)
         songs = sorted(songs, key=lambda k: k['timestamp'])
         for song in songs:
