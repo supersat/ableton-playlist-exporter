@@ -46,5 +46,8 @@ class AbletonPlaylistExporter:
             print '%s\t%s\t%s\t%s' % (song['timestamp'], song['artist'], song['title'], song['album'])
 
 if __name__ == '__main__':
-    exporter = AbletonPlaylistExporter(sys.argv[1])
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filename', help='Filename of an Ableton Live Set (.als) file')
+    args = parser.parse_args()
+    exporter = AbletonPlaylistExporter(args.filename)
     exporter.export()
