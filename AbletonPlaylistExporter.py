@@ -41,13 +41,15 @@ class AbletonPlaylistExporter:
             except:
                 pass
             songs.append(song)
+        playlist = ''
         songs = sorted(songs, key=lambda k: k['timestamp'])
         for song in songs:
-            print '%s\t%s\t%s\t%s' % (song['timestamp'], song['artist'], song['title'], song['album'])
+            playlist = playlist + '%s\t%s\t%s\t%s\n' % (song['timestamp'], song['artist'], song['title'], song['album'])
+        return playlist
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('filename', help='Filename of an Ableton Live Set (.als) file')
     args = parser.parse_args()
     exporter = AbletonPlaylistExporter(args.filename)
-    exporter.export()
+    print exporter.export()
